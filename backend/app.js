@@ -26,7 +26,7 @@ app.use(
                 return {
                     id: req.id,
                     method: req.method,
-                    url: req.path,  
+                    url: req.raw?.path ?? req.path,  
                 };
             }
         }
