@@ -20,7 +20,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
     pinoHttp({
-        logger
+        logger,
+        serializers: {
+            req(req) {
+                return {
+                    id: req.id,
+                    method: req.method,
+                    url: req.path,  
+                };
+            }
+        }
     })
 );
 app.use(passport.initialize());

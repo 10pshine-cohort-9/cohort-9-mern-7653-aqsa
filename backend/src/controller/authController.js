@@ -3,7 +3,6 @@ import generateToken from "../utils/generateToken.js";
 import { registerUser, loginUser } from "../services/auth.service.js";
 
 export const register = asyncHandler(async(req,res) =>{
-    console.log("hitting controller")
     const user=await registerUser(req.body);
     const token=generateToken(user._id);
     res.status(201).json({
@@ -32,18 +31,24 @@ export const login=asyncHandler(async(req,res)=>{
     })
 })
 export const googleCallback = (req, res) => {
-    const token = generateToken(req.user._id);
-    res.status(200).json({
-        success: true,
-        message: "Google Login Successful",
-        token,
-        user: {
-            id: req.user._id,
-            username: req.user.username,
-            email: req.user.email
-        }
-    });
+  const token = generateToken(req.user._id);
+  if (process.env.FRONTEND_URL) {
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/google-success?token=${encodeURIComponent(token)}`
+    );
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Google Login Successful",
+    token,
+    user: {
+      id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+    },
+  });
 };
+
 export const getProfile = (req, res) => {
     res.status(200).json({
         success: true,

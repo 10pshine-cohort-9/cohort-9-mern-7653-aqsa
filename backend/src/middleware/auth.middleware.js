@@ -3,7 +3,6 @@ import User from "../models/user.model.js";
 import dotenv from "dotenv";
 dotenv.config();
 import ApiError from "../utils/ApiError.js";
-
 const protect = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -19,7 +18,14 @@ const protect = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        next(error);
+        if (
+        error instanceof jwt.JsonWebTokenError ||
+        error instanceof jwt.TokenExpiredError
+    ) {
+        error.statusCode = 401;
+        error.message = "Invalid or expired token";
+    }
+    next(error);
     }
 };
 

@@ -12,11 +12,19 @@ export const registerUser=async({username,email,password})=>{
     }
 
     const hashedPassword=await bcrypt.hash(password,10);
-    const user=await User.create({
+    let user;
+    try {
+        user = await User.create({
         username,
         email,
-        password:hashedPassword
+        password: hashedPassword,
     });
+    } catch (error) {
+        if (error.code === 11000) {
+            throw new ApiError(400, "Username or email already exists");
+        }
+        throw error;
+}
     return user;
 };
 export const loginUser=async({email,password})=>{

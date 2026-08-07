@@ -5,9 +5,18 @@ import connectDB from "./src/config/db.js";
 import logger from "./src/config/logger.js";
 const PORT = process.env.PORT || 5000;
 const startServer = async()=>{
-    await connectDB();
-    app.listen(PORT, () => {
-        logger.info(`Server running on port ${PORT}`);
-    });
+    try{
+        await connectDB();
+        app.listen(PORT, () => {
+            logger.info(`Server running on port ${PORT}`);
+        });
+    }catch(e){
+        logger.error(error, "Failed to start server");
+        process.exit(1);
+    }
+   
 };
-startServer();
+startServer().catch((error) => {
+    logger.error(error, "Unhandled startup error");
+    process.exit(1);
+});
