@@ -15,21 +15,22 @@ passport.use(
           email: profile.emails[0].value,
         });
         if (!user) {
-          let username =profile.displayName?.trim().replace(/\s+/g, "").toLowerCase() || "user";
-          username = username.substring(0, 20);
-          let baseUsername = username;
-          let counter = 1;
-          while (await User.findOne({ username })) {
-            username = `${baseUsername}${counter}`;
+            let username =profile.displayName?.trim().replace(/\s+/g, "").toLowerCase() || "user";
             username = username.substring(0, 20);
-            counter++;
-          }
-        user = await User.create({
-          username,
-          email: profile.emails[0].value,
-          googleId: profile.id,
-          provider: "google",
-        });
+            const baseUsername = username;
+            let counter = 1;
+            while (await User.findOne({ username })) {
+              const suffix = String(counter);
+              const maxBaseLength = 20 - suffix.length;
+              username = `${baseUsername.substring(0, maxBaseLength)}${suffix}`;
+              counter++;
+  }
+  user = await User.create({
+    username,
+    email: profile.emails[0].value,
+    googleId: profile.id,
+    provider: "google",
+  });
         } else {
           if (user.googleId && user.googleId !== profile.id) {
             return done(

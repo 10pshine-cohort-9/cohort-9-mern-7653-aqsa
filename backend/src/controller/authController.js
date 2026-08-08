@@ -32,15 +32,18 @@ export const login=asyncHandler(async(req,res)=>{
 })
 export const googleCallback = (req, res) => {
   const token = generateToken(req.user._id);
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   if (process.env.FRONTEND_URL) {
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/google-success?token=${encodeURIComponent(token)}`
-    );
+    return res.redirect(`${process.env.FRONTEND_URL}/google-success`);
   }
   return res.status(200).json({
     success: true,
     message: "Google Login Successful",
-    token,
     user: {
       id: req.user._id,
       username: req.user.username,
