@@ -2,34 +2,45 @@ import asyncHandler from "../utils/asyncHandler.js";
 import generateToken from "../utils/generateToken.js";
 import { registerUser, loginUser } from "../services/auth.service.js";
 
-export const register = asyncHandler(async(req,res) =>{
-    const user=await registerUser(req.body);
-    const token=generateToken(user._id);
+export const register = asyncHandler(async (req, res) => {
+    const user = await registerUser(req.body);
+    const token = generateToken(user._id);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     res.status(201).json({
-        success:true,
-        message:"User registered successfully",
-        token,
-        user:{
-            id:user._id,
-            username:user.username,
-            email:user.email,
-        }
-    })
+        success: true,
+        message: "User registered successfully",
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+        },
+    });
 });
-export const login=asyncHandler(async(req,res)=>{
-    const user=await loginUser(req.body);
-    const token=generateToken(user._id);
+
+export const login = asyncHandler(async (req, res) => {
+    const user = await loginUser(req.body);
+    const token = generateToken(user._id);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     res.status(200).json({
-        success:true,
-        message:"User logged in successfully",
-        token,
-        user:{
-            id:user._id,
-            username:user.username,
-            email:user.email,
-        }
-    })
-})
+        success: true,
+        message: "User logged in successfully",
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+        },
+    });
+});
 export const googleCallback = (req, res) => {
   const token = generateToken(req.user._id);
   res.cookie("token", token, {
@@ -59,8 +70,14 @@ export const getProfile = (req, res) => {
     });
 };
 export const logout = (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
+
     res.status(200).json({
         success: true,
-        message: "Logged out successfully. Please remove the token on the client."
+        message: "Logged out successfully",
     });
 };
