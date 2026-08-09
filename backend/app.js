@@ -6,6 +6,7 @@ import pinoHttp from "pino-http";
 import logger from "./src/config/logger.js";
 import errorHandler from "./src/middleware/error.middleware.js";
 import notFound from "./src/middleware/notFound.middleware.js";
+import csrfProtection from "./src/middleware/csrf.middleware.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import passport from "./src/config/passport.js";
 
@@ -23,6 +24,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(csrfProtection);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
