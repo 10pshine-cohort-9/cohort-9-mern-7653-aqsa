@@ -1,0 +1,10 @@
+import express from "express";
+import protect from "../middleware/auth.middleware.js";
+import {getTasks,createTask,updateTask,toggleTaskStatus,deleteTask,} from "../controller/taskController.js";
+const router = express.Router();
+router.get("/", protect,getTasks);
+router.post("/", protect,createTask);
+router.put("/:id", protect,updateTask);
+router.patch("/:id/toggle", protect,toggleTaskStatus);
+router.delete("/:id", protect,deleteTask);
+export default router;

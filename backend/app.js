@@ -9,6 +9,12 @@ import notFound from "./src/middleware/notFound.middleware.js";
 import csrfProtection from "./src/middleware/csrf.middleware.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import passport from "./src/config/passport.js";
+import noteRoutes from "./src/routes/note.routes.js"
+import mediaRoutes from "./src/routes/media.routes.js"
+import categoryRoutes from "./src/routes/category.routes.js";
+import folderRoutes from "./src/routes/folder.routes.js"
+import taskRoutes from "./src/routes/task.routes.js"
+import stickyRoutes from './src/routes/sticky.routes.js'
 
 const app = express();
 app.use(helmet());
@@ -51,6 +57,13 @@ app.get("/", (req, res) => {
   });
 });
 app.use("/api/auth", authRoutes);
+app.use("/api/notes", noteRoutes);
+app.use("/api/media", mediaRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/folders", folderRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/sticky", stickyRoutes);
+
 app.use(notFound);
 app.use(errorHandler);
 
