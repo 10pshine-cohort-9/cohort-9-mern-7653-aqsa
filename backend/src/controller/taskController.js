@@ -80,15 +80,16 @@ export const toggleTaskStatus = async (req, res) => {
       { _id: req.params.id, user: req.user._id },
       [ { $set: { completed: { $not: "$completed" } } } ],
       { new: true }
-    );
+    ).populate("note", "title");
+
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-    const populatedTask = await Task.findById(task._id).populate("note", "title");
-    getIO().to(req.user._id.toString()).emit("task_updated", populatedTask);
+
+    getIO().to(req.user._id.toString()).emit("task_updated", task);
     res.status(200).json({
-      message: populatedTask.completed ? "Task completed" : "Task marked pending",
-      task: populatedTask,
+      message: task.completed ? "Task completed" : "Task marked pending",
+      task,
     });
   } catch (error) {
     console.error("Toggle task error:", error);

@@ -230,22 +230,23 @@ export const deleteNote = async (req, res) => {
     const note = await Note.findOne({ _id: req.params.id, user: req.user._id }).session(session);
     if (!note) {
       await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ message: "Note not found" });
     }
     const pagesCopy = note.pages;
     await Task.updateMany({ note: note._id }, { $set: { note: null } }).session(session);
     await note.deleteOne({ session });
     await session.commitTransaction();
-    session.endSession();
 
     await deleteMediaFromPages(pagesCopy, req.user._id);
     res.status(200).json({ message: "Note and its media deleted successfully" });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.error("Delete note error:", error);
     res.status(500).json({ message: "Failed to delete note", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
