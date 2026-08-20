@@ -21,7 +21,6 @@ export const uploadMedia = async (req, res) => {
     console.error("Upload media error:", error);
     res.status(500).json({
       message: "Failed to upload media",
-      error: error.message,
     });
   }
 };

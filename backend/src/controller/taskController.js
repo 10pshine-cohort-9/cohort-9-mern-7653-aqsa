@@ -51,6 +51,9 @@ export const createTask = async (req, res) => {
 export const updateTask = async (req, res) => {
   try {
     const { title, description, completed, dueDate, priority, note } = req.body;
+    if (title !== undefined && (!title || !title.trim())) {
+      return res.status(400).json({ message: "Task title cannot be empty" });
+    }
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -73,16 +76,18 @@ export const updateTask = async (req, res) => {
 
 export const toggleTaskStatus = async (req, res) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      [ { $set: { completed: { $not: "$completed" } } } ],
+      { new: true }
+    );
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-    task.completed = !task.completed;
-    await task.save();
     const populatedTask = await Task.findById(task._id).populate("note", "title");
     getIO().to(req.user._id.toString()).emit("task_updated", populatedTask);
     res.status(200).json({
-      message: task.completed ? "Task completed" : "Task marked pending",
+      message: populatedTask.completed ? "Task completed" : "Task marked pending",
       task: populatedTask,
     });
   } catch (error) {

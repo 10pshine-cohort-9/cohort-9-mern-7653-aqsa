@@ -1,7 +1,13 @@
 import Note from "../models/note.model.js";
+import Task from "../models/task.model.js";
 import Category from "../models/category.model.js";
 import Folder from "../models/folder.model.js";
 import cloudinary from "../config/cloudinary.js";
+import mongoose from "mongoose";
+
+const escapeRegex = (text) => {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
 
 export const createNote = async (req, res) => {
   try {
@@ -40,7 +46,8 @@ export const getNotes = async (req, res) => {
     const { search, category, folder, favorite, page = 1, limit = 20 } = req.query;
     const query = { user: req.user._id };
     if (search) {
-      query.title = { $regex: search, $options: "i" };
+      const sanitizedSearch = String(search).trim().slice(0, 100);
+      query.title = { $regex: escapeRegex(sanitizedSearch), $options: "i" };
     }
     if (category) {
       query.categories = category;
@@ -122,11 +129,14 @@ export const updateNote = async (req, res) => {
     if (title !== undefined) {
       note.title = title;
     }
+    const oldPages = note.pages;
     if (pages !== undefined) {
-      await deleteRemovedCloudinaryMedia(note.pages, pages);
       note.pages = pages;
     }
     await note.save();
+    if (pages !== undefined) {
+      await deleteRemovedCloudinaryMedia(oldPages, pages, req.user._id);
+    }
     const updatedNote = await Note.findById(note._id)
       .populate("categories", "name")
       .populate("folder", "name color");
@@ -172,8 +182,8 @@ export const updatePage = async (req, res) => {
       return res.status(404).json({ message: "Page not found" });
     }
     const { width, height, sizePreset, orientation, background, objects } = req.body;
+    const oldPageObj = page.toObject();
     if (objects !== undefined) {
-      await deleteRemovedCloudinaryMedia([page], [{ ...page.toObject(), objects }]);
       page.objects = objects;
     }
     if (width !== undefined) page.width = width;
@@ -182,6 +192,9 @@ export const updatePage = async (req, res) => {
     if (orientation !== undefined) page.orientation = orientation;
     if (background !== undefined) page.background = background;
     await note.save();
+    if (objects !== undefined) {
+      await deleteRemovedCloudinaryMedia([oldPageObj], [{ ...oldPageObj, objects }], req.user._id);
+    }
     res.status(200).json({ message: "Page updated successfully", page });
   } catch (error) {
     console.error("Update page error:", error);
@@ -199,9 +212,10 @@ export const deletePage = async (req, res) => {
     if (!page) {
       return res.status(404).json({ message: "Page not found" });
     }
-    await deleteMediaFromPages([page]);
+    const pageObj = page.toObject();
     page.deleteOne();
     await note.save();
+    await deleteMediaFromPages([pageObj], req.user._id);
     res.status(200).json({ message: "Page deleted successfully" });
   } catch (error) {
     console.error("Delete page error:", error);
@@ -210,15 +224,26 @@ export const deletePage = async (req, res) => {
 };
 
 export const deleteNote = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const note = await Note.findOne({ _id: req.params.id, user: req.user._id });
+    const note = await Note.findOne({ _id: req.params.id, user: req.user._id }).session(session);
     if (!note) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Note not found" });
     }
-    await deleteMediaFromPages(note.pages);
-    await note.deleteOne();
+    const pagesCopy = note.pages;
+    await Task.updateMany({ note: note._id }, { $set: { note: null } }).session(session);
+    await note.deleteOne({ session });
+    await session.commitTransaction();
+    session.endSession();
+
+    await deleteMediaFromPages(pagesCopy, req.user._id);
     res.status(200).json({ message: "Note and its media deleted successfully" });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Delete note error:", error);
     res.status(500).json({ message: "Failed to delete note", error: error.message });
   }
@@ -242,7 +267,7 @@ export const toggleFavorite = async (req, res) => {
   }
 };
 
-const deleteRemovedCloudinaryMedia = async (oldPages, newPages) => {
+const deleteRemovedCloudinaryMedia = async (oldPages, newPages, userId) => {
   const oldMedia = [];
   for (const page of oldPages) {
     for (const object of page.objects || []) {
@@ -265,14 +290,13 @@ const deleteRemovedCloudinaryMedia = async (oldPages, newPages) => {
       await cloudinary.uploader.destroy(media.publicId, {
         resource_type: media.resourceType || "image",
       });
-      console.log(`Deleted Cloudinary file: ${media.publicId}`);
     } catch (error) {
       console.error(`Failed to delete Cloudinary file: ${media.publicId}`, error);
     }
   }
 };
 
-const deleteMediaFromPages = async (pages) => {
+const deleteMediaFromPages = async (pages, userId) => {
   for (const page of pages) {
     for (const object of page.objects || []) {
       if (["image", "audio", "video"].includes(object.type) && object.publicId) {
@@ -280,7 +304,6 @@ const deleteMediaFromPages = async (pages) => {
           await cloudinary.uploader.destroy(object.publicId, {
             resource_type: object.resourceType || "image",
           });
-          console.log(`Deleted Cloudinary file: ${object.publicId}`);
         } catch (error) {
           console.error(`Failed to delete Cloudinary file: ${object.publicId}`, error);
         }

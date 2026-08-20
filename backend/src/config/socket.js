@@ -18,6 +18,7 @@ export const initSocket = (server) => {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+
   io = new Server(server, {
     cors: {
       origin: allowedOrigins,
@@ -45,20 +46,17 @@ export const initSocket = (server) => {
   });
   io.on("connection", (socket) => {
     logger.info(`New client connected: ${socket.id}`);
+    
     if (socket.userId) {
       socket.join(socket.userId.toString());
       logger.info(`Socket ${socket.id} automatically joined user room: ${socket.userId}`);
     }
-    socket.on("join_user_room", (userId) => {
-      if (userId) {
-        socket.join(userId.toString());
-        logger.info(`Socket ${socket.id} joined user room manually: ${userId}`);
-      }
-    });
+
     socket.on("disconnect", () => {
       logger.info(`Client disconnected: ${socket.id}`);
     });
   });
+
   return io;
 };
 export const getIO = () => {
