@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
-import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 
 export const registerUser = async ({ username, email, password }) => {
