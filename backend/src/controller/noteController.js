@@ -47,7 +47,11 @@ export const getNotes = async (req, res) => {
     const query = { user: req.user._id };
     if (search) {
       const sanitizedSearch = String(search).trim().slice(0, 100);
-      query.title = { $regex: escapeRegex(sanitizedSearch), $options: "i" };
+      const searchRegex = { $regex: escapeRegex(sanitizedSearch), $options: "i" };
+      query.$or = [
+        { title: searchRegex },
+        { "pages.objects.content": searchRegex },
+      ];
     }
     if (category) {
       query.categories = category;
@@ -224,29 +228,24 @@ export const deletePage = async (req, res) => {
 };
 
 export const deleteNote = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const note = await Note.findOne({ _id: req.params.id, user: req.user._id }).session(session);
+    const note = await Note.findOne({ _id: req.params.id, user: req.user._id });
     if (!note) {
-      await session.abortTransaction();
       return res.status(404).json({ message: "Note not found" });
     }
     const pagesCopy = note.pages;
-    await Task.updateMany({ note: note._id }, { $set: { note: null } }).session(session);
-    await note.deleteOne({ session });
-    await session.commitTransaction();
+    
+    // Remove note reference from tasks and delete the note
+    await Task.updateMany({ note: note._id }, { $set: { note: null } });
+    await note.deleteOne();
 
+    // Clean up uploaded media files
     await deleteMediaFromPages(pagesCopy, req.user._id);
+    
     res.status(200).json({ message: "Note and its media deleted successfully" });
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
     console.error("Delete note error:", error);
     res.status(500).json({ message: "Failed to delete note", error: error.message });
-  } finally {
-    session.endSession();
   }
 };
 

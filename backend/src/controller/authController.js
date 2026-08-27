@@ -1,6 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import generateToken from "../utils/generateToken.js";
-import { registerUser, loginUser } from "../services/auth.service.js";
+import {registerUser,loginUser,forgotPasswordService,resetPasswordService} from "../services/auth.service.js";
+
 
 export const register = asyncHandler(async (req, res) => {
     const user = await registerUser(req.body);
@@ -68,6 +69,35 @@ export const getProfile = (req, res) => {
         success: true,
         user: req.user
     });
+};
+export const forgotPassword = asyncHandler(async (req, res) => {
+    await forgotPasswordService(
+      req.body.email
+    );
+    res.status(200).json({
+      success: true,
+      message:
+        "Password reset email sent",
+    });
+  }
+);
+export const resetPassword = async (req,res,next) => {
+  try {
+    const {email,otp,password,} = req.body;
+    await resetPasswordService(
+      email,
+      otp,
+      password
+    );
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Password reset successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 export const logout = (req, res) => {
     res.clearCookie("token", {

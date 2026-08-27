@@ -1,6 +1,6 @@
 import express from 'express';
 import protect from '../middleware/auth.middleware.js';
-import { login, register,googleCallback,getProfile,logout } from '../controller/authController.js';
+import { login, register,googleCallback,getProfile,logout,forgotPassword,resetPassword } from '../controller/authController.js';
 import passport from "passport";
 
 import validate from "../middleware/validate.middleware.js";
@@ -18,7 +18,6 @@ router.get(
     passport.authenticate("google", {
         scope: ["profile", "email"],
         state:true,
-
     })
 );
 router.get(
@@ -33,6 +32,14 @@ router.get(
     "/profile",
     protect,
     getProfile
+);
+router.post(
+  "/forgot-password",
+  forgotPassword
+);
+router.post(
+  "/reset-password",
+  resetPassword
 );
 router.post(
     "/logout",

@@ -31,7 +31,9 @@ const userSchema=new mongoose.Schema({
         type:String,
         enum:["local","google"],
         default:"local"
-    }
+    },
+    resetPasswordOtp: String,
+resetPasswordExpire: Date,
 },
 {
     timestamps:true
