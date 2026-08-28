@@ -78,20 +78,27 @@ export const forgotPasswordService = async (email) => {
   return true;
 };
 export const resetPasswordService = async (email,otp,password) => {
-  const user = await User.findOne({
-    email,
-    resetPasswordExpire: {
-      $gt: Date.now(),
+  const user = await User.findOneAndUpdate(
+    {
+      email,
+      resetPasswordExpire: {
+        $gt: Date.now(),
+      },
+      resetPasswordAttempts: {
+        $lt: 5,
+      },
     },
-  }).select("+password +resetPasswordOtp +resetPasswordAttempts");
-
+    {
+      $inc: {
+        resetPasswordAttempts: 1,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("+password +resetPasswordOtp +resetPasswordAttempts");
   if (!user) {
-    throw new ApiError(
-      400,
-      "Invalid or expired OTP"
-    );
-  }
-  if (user.resetPasswordAttempts >= 5) {
     throw new ApiError(
       429,
       "Too many OTP attempts. Please request a new OTP."
@@ -102,14 +109,11 @@ export const resetPasswordService = async (email,otp,password) => {
     user.resetPasswordOtp
   );
   if (!isValidOtp) {
-    user.resetPasswordAttempts += 1;
-    await user.save();
     throw new ApiError(
       400,
       "Invalid or expired OTP"
     );
   }
-
   user.password = await bcrypt.hash(
     password,
     10

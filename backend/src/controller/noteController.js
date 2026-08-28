@@ -228,8 +228,9 @@ export const deletePage = async (req, res) => {
 };
 
 export const deleteNote = async (req, res) => {
-  const session = await mongoose.startSession();
+  let session;
   try {
+    session = await mongoose.startSession();
     let pagesCopy;
     await session.withTransaction(async () => {
       const note = await Note.findOne({
@@ -254,21 +255,24 @@ export const deleteNote = async (req, res) => {
       message: "Note and its media deleted successfully",
     });
   } catch (error) {
-  console.error("DELETE NOTE ERROR:");
-  console.error(error);
-  console.error(error.stack);
-
-  if (error.statusCode === 404) {
-    return res.status(404).json({
-      message: "Note not found",
+    console.error("DELETE NOTE ERROR:");
+    console.error(error);
+    console.error(error.stack);
+    if (error.statusCode === 404) {
+      return res.status(404).json({
+        message: "Note not found",
+      });
+    }
+    return res.status(500).json({
+      message: "Failed to delete note",
+      error: error.message,
     });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
-
-  return res.status(500).json({
-    message: "Failed to delete note",
-    error: error.message,
-  });
-} }
+};
 
 export const toggleFavorite = async (req, res) => {
   try {

@@ -238,38 +238,38 @@ describe("Auth Integration Tests", function () {
     });
 
     it("should return the same response for an existing email", async function () {
-      const response = await request(app)
-        .post("/api/auth/forgot-password")
-        .set("Origin", "http://localhost:5173")
-        .send({
-          email: "aqsa00466@gmail.com"
-        });
-
-      expect(response.status).to.equal(200);
-      expect(response.body.success).to.equal(true);
-      expect(response.body.message).to.equal(
-        "If an account with that email exists, a password reset link has been sent."
-      );
+  const response = await request(app)
+    .post("/api/auth/forgot-password")
+    .set("Origin", "http://localhost:5173")
+    .send({
+      email: user.email
     });
+
+  expect(response.status).to.equal(200);
+  expect(response.body.success).to.equal(true);
+  expect(response.body.message).to.equal(
+    "If an account with that email exists, a password reset otp has been sent."
+  );
+});
   });
 
   describe("POST /api/auth/reset-password", function () {
     it("should reject invalid OTP", async function () {
-      const response = await request(app)
-        .post("/api/auth/reset-password")
-        .set("Origin", "http://localhost:5173")
-        .send({
-          email: "aqsa00466@gmail.com",
-          otp: "000000",
-          password: "newpassword"
-        });
-
-      expect(response.status).to.equal(400);
-      expect(response.body.success).to.equal(false);
-      expect(response.body.error).to.equal(
-        "Invalid or expired OTP"
-      );
+  const response = await request(app)
+    .post("/api/auth/reset-password")
+    .set("Origin", "http://localhost:5173")
+    .send({
+      email: user.email,
+      otp: "000000",
+      password: "newpassword"
     });
+
+  expect(response.status).to.equal(400);
+  expect(response.body.success).to.equal(false);
+  expect(response.body.error).to.equal(
+    "Invalid or expired OTP"
+  );
+});
   });
 
   describe("POST /api/auth/logout", function () {
