@@ -3,21 +3,27 @@ import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import http from "http";
 import app from "../../app.js";
 import User from "../../src/models/user.model.js";
+import { initSocket } from "../../src/config/socket.js";
 
 describe("Auth Integration Tests", function () {
+  let server;
   let user;
   let token;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_TEST_URI);
+
+    server = http.createServer(app);
+    initSocket(server);
 
     const hashedPassword = await bcrypt.hash("123456", 10);
 
     user = await User.create({
-      username: "integrationtest",
-      email: "integration@test.com",
+      username: "authintegration",
+      email: "authintegration@test.com",
       password: hashedPassword,
       provider: "local"
     });
@@ -30,19 +36,24 @@ describe("Auth Integration Tests", function () {
   });
 
   after(async function () {
-    await User.deleteOne({ email: "integration@test.com" });
-    await User.deleteOne({ email: "newintegration@test.com" });
+  try {
+    if (user?._id) {
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     await mongoose.connection.close();
-  });
+    server.close();
+  }
+});
 
   describe("POST /api/auth/register", function () {
-    it("should register a user", async function () {
+    it("should register a new user", async function () {
       const response = await request(app)
         .post("/api/auth/register")
         .set("Origin", "http://localhost:5173")
         .send({
-          username: "newintegration",
-          email: "newintegration@test.com",
+          username: "newauthuser",
+          email: "newauthuser@test.com",
           password: "123456"
         });
 
@@ -51,7 +62,15 @@ describe("Auth Integration Tests", function () {
       expect(response.body.message).to.equal(
         "User registered successfully"
       );
+      expect(response.body.user.username).to.equal("newauthuser");
+      expect(response.body.user.email).to.equal(
+        "newauthuser@test.com"
+      );
       expect(response.headers["set-cookie"]).to.exist;
+
+      await User.deleteOne({
+        email: "newauthuser@test.com"
+      });
     });
 
     it("should reject invalid registration data", async function () {
@@ -68,12 +87,29 @@ describe("Auth Integration Tests", function () {
       expect(response.body.success).to.equal(false);
     });
 
-    it("should reject registration without CSRF origin", async function () {
+    it("should reject duplicate email", async function () {
+      const response = await request(app)
+        .post("/api/auth/register")
+        .set("Origin", "http://localhost:5173")
+        .send({
+          username: "anotheruser",
+          email: "authintegration@test.com",
+          password: "123456"
+        });
+
+      expect(response.status).to.equal(400);
+      expect(response.body.success).to.equal(false);
+      expect(response.body.error).to.equal(
+        "Email already exists"
+      );
+    });
+
+    it("should reject request without CSRF origin", async function () {
       const response = await request(app)
         .post("/api/auth/register")
         .send({
           username: "csrfuser",
-          email: "csrf@test.com",
+          email: "csrfuser@test.com",
           password: "123456"
         });
 
@@ -91,7 +127,7 @@ describe("Auth Integration Tests", function () {
         .post("/api/auth/login")
         .set("Origin", "http://localhost:5173")
         .send({
-          email: "integration@test.com",
+          email: "authintegration@test.com",
           password: "123456"
         });
 
@@ -99,6 +135,9 @@ describe("Auth Integration Tests", function () {
       expect(response.body.success).to.equal(true);
       expect(response.body.message).to.equal(
         "User logged in successfully"
+      );
+      expect(response.body.user.email).to.equal(
+        "authintegration@test.com"
       );
       expect(response.headers["set-cookie"]).to.exist;
     });
@@ -108,7 +147,7 @@ describe("Auth Integration Tests", function () {
         .post("/api/auth/login")
         .set("Origin", "http://localhost:5173")
         .send({
-          email: "integration@test.com",
+          email: "authintegration@test.com",
           password: "wrongpassword"
         });
 
@@ -118,10 +157,35 @@ describe("Auth Integration Tests", function () {
         "Invalid email or password"
       );
     });
+
+    it("should reject invalid login data", async function () {
+      const response = await request(app)
+        .post("/api/auth/login")
+        .set("Origin", "http://localhost:5173")
+        .send({
+          email: "invalid",
+          password: "123"
+        });
+
+      expect(response.status).to.equal(400);
+      expect(response.body.success).to.equal(false);
+    });
+
+    it("should reject request without CSRF origin", async function () {
+      const response = await request(app)
+        .post("/api/auth/login")
+        .send({
+          email: "authintegration@test.com",
+          password: "123456"
+        });
+
+      expect(response.status).to.equal(403);
+      expect(response.body.success).to.equal(false);
+    });
   });
 
   describe("GET /api/auth/profile", function () {
-    it("should return authenticated user profile", async function () {
+    it("should return authenticated user", async function () {
       const response = await request(app)
         .get("/api/auth/profile")
         .set("Cookie", `token=${token}`);
@@ -129,7 +193,7 @@ describe("Auth Integration Tests", function () {
       expect(response.status).to.equal(200);
       expect(response.body.success).to.equal(true);
       expect(response.body.user.email).to.equal(
-        "integration@test.com"
+        "authintegration@test.com"
       );
     });
 
@@ -158,7 +222,7 @@ describe("Auth Integration Tests", function () {
   });
 
   describe("POST /api/auth/forgot-password", function () {
-    it("should return error for unknown user", async function () {
+    it("should return the same response for an unknown email", async function () {
       const response = await request(app)
         .post("/api/auth/forgot-password")
         .set("Origin", "http://localhost:5173")
@@ -166,9 +230,26 @@ describe("Auth Integration Tests", function () {
           email: "unknown@test.com"
         });
 
-      expect(response.status).to.equal(404);
-      expect(response.body.success).to.equal(false);
-      expect(response.body.error).to.equal("User not found");
+      expect(response.status).to.equal(200);
+      expect(response.body.success).to.equal(true);
+      expect(response.body.message).to.equal(
+        "If an account with that email exists, a password reset link has been sent."
+      );
+    });
+
+    it("should return the same response for an existing email", async function () {
+      const response = await request(app)
+        .post("/api/auth/forgot-password")
+        .set("Origin", "http://localhost:5173")
+        .send({
+          email: "aqsa00466@gmail.com"
+        });
+
+      expect(response.status).to.equal(200);
+      expect(response.body.success).to.equal(true);
+      expect(response.body.message).to.equal(
+        "If an account with that email exists, a password reset link has been sent."
+      );
     });
   });
 
@@ -178,7 +259,7 @@ describe("Auth Integration Tests", function () {
         .post("/api/auth/reset-password")
         .set("Origin", "http://localhost:5173")
         .send({
-          email: "integration@test.com",
+          email: "aqsa00466@gmail.com",
           otp: "000000",
           password: "newpassword"
         });
@@ -192,7 +273,7 @@ describe("Auth Integration Tests", function () {
   });
 
   describe("POST /api/auth/logout", function () {
-    it("should logout authenticated user", async function () {
+    it("should logout successfully", async function () {
       const response = await request(app)
         .post("/api/auth/logout")
         .set("Origin", "http://localhost:5173")

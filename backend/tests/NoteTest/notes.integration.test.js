@@ -8,6 +8,7 @@ import User from "../../src/models/user.model.js";
 import Note from "../../src/models/note.model.js";
 import Category from "../../src/models/category.model.js";
 import Folder from "../../src/models/folder.model.js";
+import Task from "../../src/models/task.model.js";
 
 describe("Note Integration Tests", function () {
   let user;
@@ -18,7 +19,7 @@ describe("Note Integration Tests", function () {
   let folder;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_TEST_URI);
 
     const hashedPassword = await bcrypt.hash("123456", 10);
 
@@ -26,7 +27,7 @@ describe("Note Integration Tests", function () {
       username: "noteintegration",
       email: "noteintegration@test.com",
       password: hashedPassword,
-      provider: "local"
+      provider: "local",
     });
 
     token = jwt.sign(
@@ -37,24 +38,29 @@ describe("Note Integration Tests", function () {
 
     category = await Category.create({
       user: user._id,
-      name: "Test Category"
+      name: "Test Category",
     });
 
     folder = await Folder.create({
       user: user._id,
       name: "Test Folder",
-      color: "#ffffff"
+      color: "#ffffff",
     });
   });
 
-  after(async function () {
-    await Note.deleteMany({ user: user._id });
-    await Category.deleteMany({ user: user._id });
-    await Folder.deleteMany({ user: user._id });
-    await User.deleteOne({ _id: user._id });
+after(async function () {
+  try {
+    if (user?._id) {
+      await Task.deleteMany({ user: user._id });
+      await Note.deleteMany({ user: user._id });
+      await Category.deleteMany({ user: user._id });
+      await Folder.deleteMany({ user: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     await mongoose.connection.close();
-  });
-
+  }
+});
   describe("POST /api/notes", function () {
     it("should create a note", async function () {
       const response = await request(app)
@@ -73,11 +79,11 @@ describe("Note Integration Tests", function () {
               orientation: "portrait",
               background: {
                 type: "color",
-                value: "#ffffff"
+                value: "#ffffff",
               },
-              objects: []
-            }
-          ]
+              objects: [],
+            },
+          ],
         });
 
       expect(response.status).to.equal(201);
@@ -99,7 +105,7 @@ describe("Note Integration Tests", function () {
         .set("Cookie", `token=${token}`)
         .send({
           title: "Invalid Category Note",
-          categories: [new mongoose.Types.ObjectId().toString()]
+          categories: [new mongoose.Types.ObjectId().toString()],
         });
 
       expect(response.status).to.equal(400);
@@ -115,7 +121,7 @@ describe("Note Integration Tests", function () {
         .set("Cookie", `token=${token}`)
         .send({
           title: "Invalid Folder Note",
-          folder: new mongoose.Types.ObjectId().toString()
+          folder: new mongoose.Types.ObjectId().toString(),
         });
 
       expect(response.status).to.equal(400);
@@ -127,7 +133,7 @@ describe("Note Integration Tests", function () {
         .post("/api/notes")
         .set("Origin", "http://localhost:5173")
         .send({
-          title: "Unauthorized Note"
+          title: "Unauthorized Note",
         });
 
       expect(response.status).to.equal(401);
@@ -138,7 +144,7 @@ describe("Note Integration Tests", function () {
         .post("/api/notes")
         .set("Cookie", `token=${token}`)
         .send({
-          title: "CSRF Note"
+          title: "CSRF Note",
         });
 
       expect(response.status).to.equal(403);
@@ -229,7 +235,7 @@ describe("Note Integration Tests", function () {
         .send({
           title: "Updated Note",
           categories: [category._id.toString()],
-          folder: folder._id.toString()
+          folder: folder._id.toString(),
         });
 
       expect(response.status).to.equal(200);
@@ -245,7 +251,7 @@ describe("Note Integration Tests", function () {
         .set("Origin", "http://localhost:5173")
         .set("Cookie", `token=${token}`)
         .send({
-          title: "Updated"
+          title: "Updated",
         });
 
       expect(response.status).to.equal(404);
@@ -290,16 +296,16 @@ describe("Note Integration Tests", function () {
           orientation: "landscape",
           background: {
             type: "color",
-            value: "#eeeeee"
+            value: "#eeeeee",
           },
           objects: [
             {
               type: "text",
               content: "Test object",
               x: 10,
-              y: 20
-            }
-          ]
+              y: 20,
+            },
+          ],
         });
 
       expect(response.status).to.equal(201);
@@ -317,7 +323,7 @@ describe("Note Integration Tests", function () {
         .set("Origin", "http://localhost:5173")
         .set("Cookie", `token=${token}`)
         .send({
-          objects: []
+          objects: [],
         });
 
       expect(response.status).to.equal(404);
@@ -341,9 +347,9 @@ describe("Note Integration Tests", function () {
           objects: [
             {
               type: "text",
-              content: "Updated object"
-            }
-          ]
+              content: "Updated object",
+            },
+          ],
         });
 
       expect(response.status).to.equal(200);
@@ -361,7 +367,7 @@ describe("Note Integration Tests", function () {
         .set("Origin", "http://localhost:5173")
         .set("Cookie", `token=${token}`)
         .send({
-          width: 900
+          width: 900,
         });
 
       expect(response.status).to.equal(404);
@@ -397,7 +403,13 @@ describe("Note Integration Tests", function () {
   });
 
   describe("DELETE /api/notes/:id", function () {
-    it("should delete a note", async function () {
+    it("should delete a note and unlink it from tasks", async function () {
+      const task = await Task.create({
+        user: user._id,
+        title: "Test Task",
+        note: note._id,
+      });
+
       const response = await request(app)
         .delete(`/api/notes/${note._id}`)
         .set("Origin", "http://localhost:5173")
@@ -410,6 +422,10 @@ describe("Note Integration Tests", function () {
 
       const deletedNote = await Note.findById(note._id);
       expect(deletedNote).to.equal(null);
+
+      const updatedTask = await Task.findById(task._id);
+      expect(updatedTask).to.exist;
+      expect(updatedTask.note).to.equal(null);
     });
 
     it("should return 404 for non-existing note", async function () {

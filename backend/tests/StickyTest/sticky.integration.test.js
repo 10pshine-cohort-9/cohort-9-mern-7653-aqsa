@@ -16,7 +16,7 @@ describe("Sticky Integration Tests", function () {
   let sticky;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_TEST_URI);
 
     server = http.createServer(app);
     initSocket(server);
@@ -38,12 +38,16 @@ describe("Sticky Integration Tests", function () {
   });
 
   after(async function () {
-    await Sticky.deleteMany({ user: user._id });
-    await User.deleteOne({ _id: user._id });
+  try {
+    if (user?._id) {
+      await Sticky.deleteMany({ user: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     server.close();
     await mongoose.connection.close();
-  });
-
+  }
+});
   describe("POST /api/sticky", function () {
     it("should create a sticky note", async function () {
       const response = await request(app)

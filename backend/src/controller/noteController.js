@@ -228,26 +228,47 @@ export const deletePage = async (req, res) => {
 };
 
 export const deleteNote = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
-    const note = await Note.findOne({ _id: req.params.id, user: req.user._id });
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-    const pagesCopy = note.pages;
-    
-    // Remove note reference from tasks and delete the note
-    await Task.updateMany({ note: note._id }, { $set: { note: null } });
-    await note.deleteOne();
-
-    // Clean up uploaded media files
+    let pagesCopy;
+    await session.withTransaction(async () => {
+      const note = await Note.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+      }).session(session);
+      if (!note) {
+        const error = new Error("Note not found");
+        error.statusCode = 404;
+        throw error;
+      }
+      pagesCopy = note.pages;
+      await Task.updateMany(
+        { note: note._id },
+        { $set: { note: null } },
+        { session }
+      );
+      await note.deleteOne({ session });
+    });
     await deleteMediaFromPages(pagesCopy, req.user._id);
-    
-    res.status(200).json({ message: "Note and its media deleted successfully" });
+    return res.status(200).json({
+      message: "Note and its media deleted successfully",
+    });
   } catch (error) {
-    console.error("Delete note error:", error);
-    res.status(500).json({ message: "Failed to delete note", error: error.message });
+  console.error("DELETE NOTE ERROR:");
+  console.error(error);
+  console.error(error.stack);
+
+  if (error.statusCode === 404) {
+    return res.status(404).json({
+      message: "Note not found",
+    });
   }
-};
+
+  return res.status(500).json({
+    message: "Failed to delete note",
+    error: error.message,
+  });
+} }
 
 export const toggleFavorite = async (req, res) => {
   try {

@@ -16,7 +16,7 @@ describe("Task Integration Tests", function () {
   let task;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_TEST_URI);
 
     server = http.createServer(app);
     initSocket(server);
@@ -37,12 +37,17 @@ describe("Task Integration Tests", function () {
     );
   });
 
-  after(async function () {
-    await Task.deleteMany({ user: user._id });
-    await User.deleteOne({ _id: user._id });
+ after(async function () {
+  try {
+    if (user?._id) {
+      await Task.deleteMany({ user: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     server.close();
     await mongoose.connection.close();
-  });
+  }
+});
 
   describe("POST /api/tasks", function () {
     it("should create a task", async function () {

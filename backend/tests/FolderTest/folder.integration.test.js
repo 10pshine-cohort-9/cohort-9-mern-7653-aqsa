@@ -14,7 +14,7 @@ describe("Folder Integration Tests", function () {
   let folder;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_TEST_URI);
 
     const password = await bcrypt.hash("123456", 10);
 
@@ -32,13 +32,17 @@ describe("Folder Integration Tests", function () {
     );
   });
 
-  after(async function () {
-    await Note.deleteMany({ user: user._id });
-    await Folder.deleteMany({ user: user._id });
-    await User.deleteOne({ _id: user._id });
+ after(async function () {
+  try {
+    if (user?._id) {
+      await Note.deleteMany({ user: user._id });
+      await Folder.deleteMany({ user: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     await mongoose.connection.close();
-  });
-
+  }
+});
   describe("POST /api/folders", function () {
     it("should create a folder", async function () {
       const response = await request(app)

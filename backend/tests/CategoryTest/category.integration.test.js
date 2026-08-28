@@ -13,7 +13,7 @@ describe("Category Integration Tests", function () {
   let category;
 
   before(async function () {
-    await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGO_TEST_URI);
 
     const hashedPassword = await bcrypt.hash("123456", 10);
 
@@ -32,11 +32,15 @@ describe("Category Integration Tests", function () {
   });
 
   after(async function () {
-    await Category.deleteMany({ user: user._id });
-    await User.deleteOne({ _id: user._id });
+  try {
+    if (user?._id) {
+      await Category.deleteMany({ user: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+  } finally {
     await mongoose.connection.close();
-  });
-
+  }
+});
   describe("POST /api/categories", function () {
     it("should create a category", async function () {
       const response = await request(app)
