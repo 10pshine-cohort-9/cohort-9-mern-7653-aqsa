@@ -79,7 +79,7 @@ export const toggleTaskStatus = async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
       [ { $set: { completed: { $not: "$completed" } } } ],
-      { new: true }
+      { new: true, updatePipeline: true } // <-- Add updatePipeline: true here
     ).populate("note", "title");
 
     if (!task) {

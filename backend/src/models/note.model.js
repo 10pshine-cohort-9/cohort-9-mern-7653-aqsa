@@ -22,6 +22,7 @@ const objectSchema = new mongoose.Schema(
     duration: { type: Number, default: 0 },
     crop: { type: mongoose.Schema.Types.Mixed, default: null },
     style: { type: mongoose.Schema.Types.Mixed, default: {} },
+    charStyles: { type: mongoose.Schema.Types.Mixed, default: {} }, 
   },
   { _id: true, timestamps: true }
 );
