@@ -1,10 +1,16 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Canvas, Textbox, FabricImage, PencilBrush, Path, Rect, Circle, Triangle, Line } from "fabric";
 import { uploadFile } from "../../api/media.js";
-import { TEXT_MIN_WIDTH, TEXT_MAX_WIDTH, MAX_TEXT_LENGTH, MAX_MEDIA_SIZE } from "../editor/canvas/constants.js";
+
 import {configureTextbox,loadImageElement,readActiveStyles,exportCanvasObjectsHelper,} from "../editor/canvas/canvasUtils.js";
 import ContextMenu from "../editor/canvas/ContextMenu.jsx";
 import ToastWarning from "../editor/canvas/ToastWarning.jsx";
+
+export const TEXT_MIN_WIDTH = 100;
+export const TEXT_MAX_WIDTH = 600;
+export const MAX_TEXT_LENGTH = 600;
+export const MAX_MEDIA_SIZE = 100 * 1024 * 1024; 
+
 const FabricCanvas = forwardRef(function FabricCanvas(
   {
     page,

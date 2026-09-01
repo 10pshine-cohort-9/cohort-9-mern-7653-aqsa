@@ -1,5 +1,4 @@
 import { FabricImage } from "fabric";
-import { TEXT_MIN_WIDTH, TEXT_MAX_WIDTH, MAX_TEXT_LENGTH } from "./constants.js";
 export function configureTextbox(textbox) {
   if (!textbox || textbox.type !== "textbox") return;
   textbox.setControlVisible("mt", false);

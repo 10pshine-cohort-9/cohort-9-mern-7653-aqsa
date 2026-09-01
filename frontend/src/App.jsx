@@ -1,23 +1,30 @@
 import { useState, useEffect } from 'react';
-import './App.css';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import NoteEditorPage from './pages/NoteEditorPage';
 import NotesListPage from './pages/NoteListPage';
 import FoldersPage from './pages/FoldersPage';
 import TasksPage from './pages/TasksPage';
 import StickyWallPage from './pages/StickyWallPage';
 import NoteReaderPage from './pages/NoteReaderPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import api from './api/axios';
 import ForgotPasswordPage from './components/Auth/ForgotPasswordPage';
 import ResetPasswordPage from './components/Auth/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 
+const ProtectedRoute = ({ isAuthenticated }) => {
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  return <Outlet />;
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-
   useEffect(() => {
     let isMounted = true;
     api.get('/auth/profile')
@@ -27,7 +34,6 @@ function App() {
       .catch(() => {
         if (isMounted) setIsAuthenticated(false);
       });
-
     return () => {
       isMounted = false;
     };
@@ -37,18 +43,22 @@ function App() {
   }
   return (
     <Routes>
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage/>} />
-
+          isAuthenticated
+            ? <Navigate to="/dashboard" replace />
+            : <HomePage />
+        }
+      />
       <Route
         path="/auth"
         element={
           !isAuthenticated
             ? <Auth setIsAuthenticated={setIsAuthenticated} />
             : <Navigate to="/dashboard" replace />
-        }/>
+        }
+      />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>
@@ -60,11 +70,13 @@ function App() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/stickies" element={<StickyWallPage />} />
       </Route>
-      <Route path="*"
+      <Route
+        path="*"
         element={
           <Navigate
             to={isAuthenticated ? "/dashboard" : "/"}
-            replace/>
+            replace
+          />
         }
       />
     </Routes>
@@ -72,3 +84,4 @@ function App() {
 }
 
 export default App;
+
