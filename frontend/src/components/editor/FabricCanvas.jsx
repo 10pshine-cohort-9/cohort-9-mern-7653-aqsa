@@ -4,7 +4,7 @@ import { uploadFile } from "../../api/media.js";
 
 import {configureTextbox,loadImageElement,readActiveStyles,exportCanvasObjectsHelper,} from "../editor/canvas/canvasUtils.js";
 import ContextMenu from "../editor/canvas/ContextMenu.jsx";
-import ToastWarning from "../editor/canvas/ToastWarning.jsx";
+
 
 export const TEXT_MIN_WIDTH = 100;
 export const TEXT_MAX_WIDTH = 600;
@@ -1113,7 +1113,11 @@ const FabricCanvas = forwardRef(function FabricCanvas(
         onChange={handleMediaSelected}
       />
       <canvas ref={canvasEl} />
-      <ToastWarning warningMessage={warningMessage} />
+     {warningMessage && (
+  <div className="absolute top-4 left-1/2 z-50 -translate-x-1/2 animate-bounce rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg transition-all">
+    {warningMessage}
+  </div>
+)}
       <ContextMenu
         contextMenu={contextMenu}
         page={page}
