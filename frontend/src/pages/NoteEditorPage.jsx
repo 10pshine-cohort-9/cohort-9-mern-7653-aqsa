@@ -25,6 +25,7 @@ function NoteEditorPage() {
   const [activeStyles, setActiveStyles] = useState(null);
   const [selectedMediaId, setSelectedMediaId] = useState(null);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const canvasRefs = useRef({});
   const workspaceContainerRef = useRef(null);
   const initialTouchDistanceRef = useRef(null);
@@ -196,7 +197,7 @@ function NoteEditorPage() {
   async function executeSave() {
     setShowSaveCategoryPrompt(false);
     const currentNote = noteRef.current;
-    if (!currentNote) return;
+    if (!currentNote) return false;
     try {
       setSaving(true);
       Object.values(canvasRefs.current).forEach((canvasRef) => {
@@ -215,8 +216,12 @@ function NoteEditorPage() {
       };
       await updateNote(currentNote._id, payload);
       setIsDirty(false);
+      setSaveError(null);
+      return true;
     } catch (error) {
       console.error("Failed to save note:", error);
+      setSaveError("Could not save this note. Please try again.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -379,11 +384,15 @@ function NoteEditorPage() {
         };
       }
       if (!exportedObj) return;
-      canvasRefs.current[sourcePageId]?.removeObject(rawObj);
       const targetCanvasRef = canvasRefs.current[targetPageId];
-      if (targetCanvasRef) {
+      if (!targetCanvasRef) return;
+      try {
         await targetCanvasRef.addObjectFromData(exportedObj);
+      } catch (error) {
+        console.error("Failed to move object to page:", error);
+        return;
       }
+      canvasRefs.current[sourcePageId]?.removeObject(rawObj);
       setIsDirty(true);
     },
     []
@@ -841,6 +850,9 @@ function NoteEditorPage() {
             <p className="mt-1 text-xs text-[#5f5e5d]">
               You have unsaved changes in your note. Leaving now will discard your modifications.
             </p>
+            {saveError && (
+              <p className="mt-2 text-xs font-medium text-[#ba1a1a]">{saveError}</p>
+            )}
             <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#c4c5d9]/40 pt-4">
               <button
                 type="button"
@@ -852,8 +864,8 @@ function NoteEditorPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  await executeSave();
-                  navigate("/notes");
+                  const saved = await executeSave();
+                  if (saved) navigate("/notes");
                 }}
                 className="rounded-lg bg-[#0040df] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#0035bd]"
               >

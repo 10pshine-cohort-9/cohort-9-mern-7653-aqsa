@@ -55,8 +55,6 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
             const safeX = object.x || 0;
             const safeY = object.y || 0;
             const locked = { selectable: false, evented: false, hoverCursor: "default" };
-
-            // 1. TEXT
             if (object.type === "text") {
               const textbox = new Textbox(object.content || "", {
                 left: safeX,
@@ -80,8 +78,6 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
               canvas.add(textbox);
               continue;
             }
-
-            // 2. IMAGE
             if (object.type === "image" && object.url) {
               try {
                 const imageElement = await loadImageElement(object.url);
@@ -101,8 +97,6 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
               }
               continue;
             }
-
-            // 3. SHAPE
             if (object.type === "shape") {
               const shapeType = object.style?.shapeType;
               const common = {
@@ -117,7 +111,6 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
                 strokeUniform: true,
                 ...locked,
               };
-
               let shapeObj = null;
               if (shapeType === "rectangle" || shapeType === "rect") {
                 shapeObj = new Rect({
@@ -142,8 +135,6 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
               if (shapeObj) canvas.add(shapeObj);
               continue;
             }
-
-            // 4. DRAWING / PATH
             const rawPath = object.drawing?.path || object.path || object.style?.path;
             if (object.type === "drawing" || object.type === "path" || rawPath) {
               const formattedPath = normalizePathData(rawPath);
@@ -177,9 +168,7 @@ const ReaderCanvas = forwardRef(function ReaderCanvas({ page, onReady }, ref) {
         }
       }
     }
-
     loadObjects(page.objects || []);
-
     return () => {
       cancelled = true;
       canvas.dispose();

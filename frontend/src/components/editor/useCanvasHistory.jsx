@@ -1,5 +1,13 @@
 import { useRef } from "react";
-export function useCanvasHistory(fabricCanvas, isInitializing, isHistoryAction, adjustHeight, exportObjects, updateStyles, clampObj) {
+export function useCanvasHistory(
+  fabricCanvas,
+  isInitializing,
+  isHistoryAction,
+  adjustHeight,
+  exportObjects,
+  updateStyles,
+  clampObj
+) {
   const undoStack = useRef([]);
   const redoStack = useRef([]);
   const getCanvasState = () => {
@@ -21,6 +29,8 @@ export function useCanvasHistory(fabricCanvas, isInitializing, isHistoryAction, 
   const undo = async () => {
     const canvas = fabricCanvas.current;
     if (!canvas || isHistoryAction.current || undoStack.current.length <= 1) return;
+    const previousUndoStack = [...undoStack.current];
+    const previousRedoStack = [...redoStack.current];
     try {
       isHistoryAction.current = true;
       const currentState = undoStack.current.pop();
@@ -33,6 +43,8 @@ export function useCanvasHistory(fabricCanvas, isInitializing, isHistoryAction, 
       exportObjects();
       updateStyles();
     } catch (error) {
+      undoStack.current = previousUndoStack;
+      redoStack.current = previousRedoStack;
       console.error("Undo error:", error);
     } finally {
       isHistoryAction.current = false;
@@ -57,5 +69,12 @@ export function useCanvasHistory(fabricCanvas, isInitializing, isHistoryAction, 
       isHistoryAction.current = false;
     }
   };
-  return { undoStack, redoStack, recordHistory, undo, redo, getCanvasState };
+  return {
+    undoStack,
+    redoStack,
+    recordHistory,
+    undo,
+    redo,
+    getCanvasState,
+  };
 }

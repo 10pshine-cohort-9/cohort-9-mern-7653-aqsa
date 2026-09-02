@@ -1,47 +1,118 @@
 import api from "./axios.js";
 export async function createNote(note) {
-  const { data } = await api.post("/notes", note);
-  return data;
+  try {
+    const { data } = await api.post("/notes", note);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to create note.";
+    throw new Error(message);
+  }
 }
 export async function getNote(id) {
-  const { data } = await api.get(`/notes/${id}`);
-  return data;
+  try {
+    const { data } = await api.get(`/notes/${id}`);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to fetch note.";
+    throw new Error(message);
+  }
 }
 export async function getNotes(params = {}) {
-  const { data } = await api.get("/notes", {
-    params,
-  });
-  return data;
+  try {
+    const { data } = await api.get("/notes", { params });
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to fetch notes.";
+    throw new Error(message);
+  }
 }
 export async function updateNote(id, note) {
-  const { data } = await api.put(`/notes/${id}`, note);
-  return data;
+  try {
+    const { data } = await api.put(`/notes/${id}`, note);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to update note.";
+    throw new Error(message);
+  }
 }
 export async function deleteNote(id) {
-  const { data } = await api.delete(`/notes/${id}`);
-  return data;
+  try {
+    const { data } = await api.delete(`/notes/${id}`);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to delete note.";
+    throw new Error(message);
+  }
 }
 export async function toggleFavorite(id) {
-  const { data } = await api.patch(`/notes/${id}/favorite`);
-  return data;
+  try {
+    const { data } = await api.patch(`/notes/${id}/favorite`);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to toggle favorite.";
+    throw new Error(message);
+  }
 }
 export async function addPage(noteId, page = {}) {
-  const { data } = await api.post(
-    `/notes/${noteId}/pages`,
-    page
-  );
-  return data;
+  try {
+    const { data } = await api.post(`/notes/${noteId}/pages`, page);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to add page.";
+    throw new Error(message);
+  }
 }
 export async function updatePage(noteId, pageId, page) {
-  const { data } = await api.put(
-    `/notes/${noteId}/pages/${pageId}`,
-    page
-  );
-  return data;
+  try {
+    const { data } = await api.put(`/notes/${noteId}/pages/${pageId}`, page);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to update page.";
+    throw new Error(message);
+  }
 }
 export async function deletePage(noteId, pageId) {
-  const { data } = await api.delete(
-    `/notes/${noteId}/pages/${pageId}`
-  );
-  return data;
+  try {
+    const { data } = await api.delete(`/notes/${noteId}/pages/${pageId}`);
+    return data;
+  } catch (err) {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to delete page.";
+    throw new Error(message);
+  }
 }

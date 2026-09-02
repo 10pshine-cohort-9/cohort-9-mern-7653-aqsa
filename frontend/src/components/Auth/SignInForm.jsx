@@ -15,10 +15,9 @@ export default function SignInForm() {
     setLoading(true);
     try {
       const response = await api.post("/auth/login", { email, password });
-      console.log("Logged in:", response.data);
       window.location.href = "/dashboard";
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login error:", err.response?.status);
       const data = err.response?.data;
       const backendMessage =
         data?.message ||

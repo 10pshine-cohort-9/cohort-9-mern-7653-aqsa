@@ -13,9 +13,6 @@ jest.mock("../editor/canvas/ContextMenu.jsx", () => (props) => (
     </div>
   ) : null
 ));
-jest.mock("../editor/canvas/ToastWarning.jsx", () => (props) => (
-  props.warningMessage ? <div data-testid="toast-warning">{props.warningMessage}</div> : null
-));
 const mockCanvasInstance = {
   add: jest.fn(),
   remove: jest.fn(),

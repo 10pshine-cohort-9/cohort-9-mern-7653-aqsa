@@ -3,8 +3,16 @@ export default function FolderCard({ folder, noteCount, onDelete, onAddNotes }) 
   const navigate = useNavigate();
   return (
     <article
+      tabIndex={0}
       onClick={() => navigate(`/notes?folder=${folder._id}`)}
-      className="bg-white border border-[#c4c5d9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col justify-between h-56 shadow-[0_10px_30px_-10px_rgba(28,28,23,0.08)] relative overflow-hidden">
+      onKeyDown={(e) => {
+        if (e.target.closest("button")) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(`/notes?folder=${folder._id}`);
+        }
+      }}
+      className="bg-white border border-[#c4c5d9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col justify-between h-56 shadow-[0_10px_30px_-10px_rgba(28,28,23,0.08)] relative overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0040df]">
       <div
         className="absolute top-0 left-0 right-0 h-1.5"
         style={{ backgroundColor: folder.color || "#0040df" }}/>

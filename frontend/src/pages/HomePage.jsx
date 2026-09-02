@@ -3,7 +3,6 @@ import React from "react";
 export default function HomePage() {
   return (
     <div className="font-raleway min-h-screen bg-[#fdf9f1] text-[#1c1c17] antialiased selection:bg-[#0040df] selection:text-white">
-      {/* Navigation */}
       <nav className="border-b border-[#e6e2db] bg-[#fdf9f1]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -36,8 +35,6 @@ export default function HomePage() {
           </div>
         </div>
       </nav>
-
-      {/* Hero Section */}
       <section className="relative pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl mx-auto leading-[1.1]">
@@ -71,23 +68,18 @@ export default function HomePage() {
               </svg>
             </a>
           </div>
-
-          {/* App Mockup */}
           <div className="max-w-5xl mx-auto bg-white p-2 rounded-[2rem] border border-[#e6e2db] shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden">
             <div className="w-full aspect-[16/9] md:aspect-[21/9] rounded-3xl bg-gradient-to-br from-[#1c1c17] via-[#2a2923] to-[#0040df] p-8 flex flex-col relative overflow-hidden shadow-inner text-left">
               <div className="absolute -top-32 -right-32 w-[30rem] h-[30rem] rounded-full bg-[#0040df]/30 blur-[100px] pointer-events-none" />
               <div className="absolute -bottom-32 -left-32 w-[30rem] h-[30rem] rounded-full bg-[#fdf9f1]/10 blur-[100px] pointer-events-none" />
 
               <div className="relative z-10 flex gap-6 h-full">
-                {/* Sidebar */}
                 <div className="hidden md:flex flex-col w-48 gap-3 border-r border-white/10 pr-6">
                   <div className="h-6 w-24 bg-white/20 rounded-md mb-4" />
                   <div className="h-4 w-full bg-white/10 rounded-md" />
                   <div className="h-4 w-3/4 bg-white/10 rounded-md" />
                   <div className="h-4 w-5/6 bg-white/10 rounded-md" />
                 </div>
-
-                {/* Main Canvas */}
                 <div className="flex-1 flex flex-col gap-4">
                   <div className="h-8 w-1/3 bg-white/20 rounded-lg mb-2" />
 
@@ -114,15 +106,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Features Section */}
       <section className="py-20 bg-white border-t border-[#e6e2db]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
-           
-
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
               Everything you need to capture ideas.
             </h2>
@@ -132,11 +118,7 @@ export default function HomePage() {
               multi-media workspace.
             </p>
           </div>
-
-          {/* Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-            {/* Draw */}
             <div className="bg-white rounded-none p-8 border border-[#e6e2db] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] min-h-[340px] flex flex-col relative overflow-hidden">
               <div className="absolute inset-0 pointer-events-none opacity-[0.04]">
                 <svg width="100%" height="100%">
@@ -153,25 +135,21 @@ export default function HomePage() {
                   ))}
                 </svg>
               </div>
-
               <div className="relative z-10">
                 <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                   Draw
                 </div>
-
                 <h3 className="text-2xl font-bold tracking-tight mb-3">
                   A canvas, not
                   <br />
                   a text box.
                 </h3>
-
                 <p className="text-[#5f5e5d] text-sm leading-relaxed">
                   Draw, annotate, and sketch directly on your notes pages.
                   Each page is a blank canvas — mix freehand strokes with text
                   and media.
                 </p>
               </div>
-
               <div className="mt-auto pt-8">
                 <svg width="100%" height="70" viewBox="0 0 260 70">
                   <path
@@ -192,31 +170,25 @@ export default function HomePage() {
                 </svg>
               </div>
             </div>
-
-            {/* Audio */}
             <div className="bg-[#1c1c17] rounded-none p-8 border border-[#2d2d26] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] min-h-[340px] flex flex-col">
               <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                 Audio Notes
               </div>
-
               <h3 className="text-2xl font-bold tracking-tight text-[#fdf9f1] mb-3">
                 Capture ideas
                 <br />
                 by voice.
               </h3>
-
               <p className="text-[#8a8a80] text-sm leading-relaxed">
                 Record audio directly inside a note. Playback, scrub, and
                 organize recordings alongside your written content.
               </p>
-
               <div className="mt-auto pt-8">
                 <div className="bg-[#2a2923] p-4 border border-[#3a3930]">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-[#0040df] flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs">▶</span>
                     </div>
-
                     <div className="flex-1 flex items-end gap-[3px] h-8">
                       {[3, 6, 4, 9, 7, 5, 8, 6, 10, 7, 5, 9, 6, 4, 7, 5, 8, 6, 9, 4].map(
                         (h, i) => (
@@ -238,13 +210,10 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
-            {/* Organize */}
             <div className="bg-[#f7f3eb] rounded-none p-8 border border-[#e6e2db] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] min-h-[340px] flex flex-col">
               <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                 Organize
               </div>
-
               <h3 className="text-2xl font-bold tracking-tight mb-3">
                 Folders, categories,
                 <br />
@@ -290,8 +259,6 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-
-            {/* Video */}
             <div className="bg-white rounded-none p-8 border border-[#e6e2db] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] min-h-[320px] flex flex-col">
               <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                 Video Notes
@@ -326,13 +293,10 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
-            {/* Images */}
             <div className="bg-[#f7f3eb] rounded-none p-8 border border-[#e6e2db] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] min-h-[320px] flex flex-col">
               <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                 Image Notes
               </div>
-
               <h3 className="text-2xl font-bold tracking-tight mb-3">
                 Visual thinking,
                 <br />
@@ -359,8 +323,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
-            {/* Export */}
             <div className="bg-white rounded-none p-8 border border-[#e6e2db] transition hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] min-h-[320px] flex flex-col">
               <div className="text-xs font-bold text-[#0040df] tracking-[0.1em] uppercase mb-4">
                 Export
@@ -395,8 +357,6 @@ export default function HomePage() {
             </div>
 
           </div>
-
-          {/* CTA */}
           <div className="mt-4 bg-gradient-to-br from-[#1c1c17] to-[#0040df] rounded-none p-10 md:p-14 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full" />
 
@@ -439,8 +399,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
       <footer className="border-t border-[#e6e2db] py-7">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">

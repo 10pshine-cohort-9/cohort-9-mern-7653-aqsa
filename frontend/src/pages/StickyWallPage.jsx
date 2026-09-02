@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Dashboard/Sidebar";
 import StickyHeader from "../components/Sticky/StickyHeader";
 import DraggableSticky from "../components/Sticky/DraggableSticky";
@@ -20,6 +20,7 @@ export default function StickyWallPage() {
   const [content, setContent] = useState("");
   const [color, setColor] = useState(STICKY_COLORS[0].bg);
   const [isCreating, setIsCreating] = useState(false);
+  const fetchSeq = useRef(0);
   useEffect(() => {
     loadStickies();
     fetchUser();
@@ -36,6 +37,30 @@ export default function StickyWallPage() {
     }
   }
   useEffect(() => {
+    const handleStickyCreated = (newSticky) => {
+      setStickies((prev) => {
+        if (prev.some((s) => s._id === newSticky._id)) return prev;
+        return [...prev, newSticky];
+      });
+    };
+    const handleStickyUpdated = (updatedSticky) => {
+      setStickies((prev) =>
+        prev.map((s) => (s._id === updatedSticky._id ? updatedSticky : s))
+      );
+    };
+    const handleStickyDeleted = (deletedId) => {
+      setStickies((prev) => prev.filter((s) => s._id !== deletedId));
+    };
+    socket.on("sticky_created", handleStickyCreated);
+    socket.on("sticky_updated", handleStickyUpdated);
+    socket.on("sticky_deleted", handleStickyDeleted);
+    return () => {
+      socket.off("sticky_created", handleStickyCreated);
+      socket.off("sticky_updated", handleStickyUpdated);
+      socket.off("sticky_deleted", handleStickyDeleted);
+    };
+  }, []);
+  useEffect(() => {
     if (!userId) return;
     if (!socket.connected) {
       socket.connect();
@@ -47,36 +72,29 @@ export default function StickyWallPage() {
       handleConnect();
     }
     socket.on("connect", handleConnect);
-    socket.on("sticky_created", (newSticky) => {
-      setStickies((prev) => {
-        if (prev.some((s) => s._id === newSticky._id)) return prev;
-        return [...prev, newSticky];
-      });
-    });
-    socket.on("sticky_updated", (updatedSticky) => {
-      setStickies((prev) =>
-        prev.map((s) => (s._id === updatedSticky._id ? updatedSticky : s))
-      );
-    });
-    socket.on("sticky_deleted", (deletedId) => {
-      setStickies((prev) => prev.filter((s) => s._id !== deletedId));
-    });
     return () => {
       socket.off("connect", handleConnect);
-      socket.off("sticky_created");
-      socket.off("sticky_updated");
-      socket.off("sticky_deleted");
     };
   }, [userId]);
   async function loadStickies() {
+    const seq = ++fetchSeq.current;
     try {
       setLoading(true);
       const data = await getStickies();
-      setStickies(data.stickies || []);
+      if (seq === fetchSeq.current) {
+        const fetched = data.stickies || [];
+        const fetchedIds = new Set(fetched.map((s) => s._id));
+        setStickies((prev) => {
+          const socketOnly = prev.filter((s) => !fetchedIds.has(s._id));
+          return [...fetched, ...socketOnly];
+        });
+      }
     } catch (err) {
       console.error("Failed to load stickies:", err);
     } finally {
-      setLoading(false);
+      if (seq === fetchSeq.current) {
+        setLoading(false);
+      }
     }
   }
   async function handleCreate(e) {

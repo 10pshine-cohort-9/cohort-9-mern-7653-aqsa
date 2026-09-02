@@ -90,7 +90,11 @@ export async function loadObjectsToCanvas(canvas, objects, pageWidth, pageHeight
       } else if (shapeType === "triangle") {
         shapeObj = new Triangle({ ...common, width: object.width || 110, height: object.height || 100 });
       } else if (shapeType === "line") {
-        shapeObj = new Line([0, 0, object.width || 200, 0], { ...common });
+        const { x1, y1, x2, y2 } = object.style || {};
+        const linePoints = [x1, y1, x2, y2].every((v) => typeof v === "number")
+          ? [x1, y1, x2, y2]
+          : [0, 0, object.width || 200, 0];
+        shapeObj = new Line(linePoints, { ...common });
       }
       if (shapeObj) {
         shapeObj.set("__shapeType", shapeType);

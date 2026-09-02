@@ -4,8 +4,6 @@ import { uploadFile } from "../../api/media.js";
 
 import {configureTextbox,loadImageElement,readActiveStyles,exportCanvasObjectsHelper,} from "../editor/canvas/canvasUtils.js";
 import ContextMenu from "../editor/canvas/ContextMenu.jsx";
-
-
 export const TEXT_MIN_WIDTH = 100;
 export const TEXT_MAX_WIDTH = 600;
 export const MAX_TEXT_LENGTH = 600;
@@ -176,7 +174,11 @@ const FabricCanvas = forwardRef(function FabricCanvas(
       } else if (shapeType === "triangle") {
         shapeObj = new Triangle({ ...common, width: object.width || 110, height: object.height || 100 });
       } else if (shapeType === "line") {
-        shapeObj = new Line([0, 0, object.width || 200, 0], { ...common });
+        const { x1, y1, x2, y2 } = object.style || {};
+        const linePoints = [x1, y1, x2, y2].every((v) => typeof v === "number")
+          ? [x1, y1, x2, y2]
+          : [0, 0, object.width || 200, 0];
+        shapeObj = new Line(linePoints, { ...common });
       }
       if (shapeObj) {
         shapeObj.set("__shapeType", shapeType);
@@ -953,7 +955,11 @@ const FabricCanvas = forwardRef(function FabricCanvas(
         } else if (shapeType === "triangle") {
           shapeObj = new Triangle({ ...common, width: object.width || 110, height: object.height || 100 });
         } else if (shapeType === "line") {
-          shapeObj = new Line([0, 0, object.width || 200, 0], { ...common });
+          const { x1, y1, x2, y2 } = object.style || {};
+          const linePoints = [x1, y1, x2, y2].every((v) => typeof v === "number")
+            ? [x1, y1, x2, y2]
+            : [0, 0, object.width || 200, 0];
+          shapeObj = new Line(linePoints, { ...common });
         }
         if (shapeObj) {
           shapeObj.set("__shapeType", shapeType);

@@ -227,4 +227,33 @@ describe("StickyWallPage", () => {
     });
     expect(screen.queryByText("Updated via Socket")).not.toBeInTheDocument();
   });
+  test("stale getStickies response does not overwrite a socket update that arrived first", async () => {
+    // Delay the REST response so a socket event can arrive first
+    let resolveGetStickies;
+    getStickies.mockImplementationOnce(
+      () => new Promise((resolve) => { resolveGetStickies = resolve; })
+    );
+    socket.connected = true;
+    render(<StickyWallPage />);
+    // Socket delivers a new sticky while getStickies is still pending
+    const socketSticky = {
+      _id: "s99",
+      title: "",
+      content: "Socket sticky arrived first",
+      color: "#fbcfe8",
+      position: { x: 200, y: 200 },
+    };
+    act(() => {
+      mockSocketHandlers["sticky_created"]?.(socketSticky);
+    });
+    // Now resolve the stale REST snapshot (does NOT include s99)
+    act(() => {
+      resolveGetStickies({ stickies: mockStickies });
+    });
+    // The stale snapshot should be discarded; socket sticky must still be present
+    await waitFor(() => {
+      expect(screen.queryByText(/loading wall/i)).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Socket sticky arrived first")).toBeInTheDocument();
+  });
 });

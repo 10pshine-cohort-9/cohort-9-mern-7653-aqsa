@@ -130,6 +130,10 @@ export function exportCanvasObjectsHelper(canvas) {
             strokeWidth: obj.strokeWidth || 2,
             rx: obj.rx || 0,
             ry: obj.ry || 0,
+            x1: obj.x1 ?? null,
+            y1: obj.y1 ?? null,
+            x2: obj.x2 ?? null,
+            y2: obj.y2 ?? null,
             points: obj.points || null,
             path: obj.path
               ? typeof obj.path === "string"

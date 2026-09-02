@@ -6,6 +6,10 @@ export default function DraggableSticky({ sticky, onUpdate, onDelete }) {
   });
   const [pos, setPos] = useState(posRef.current);
   const [isDragging, setIsDragging] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(sticky.title || "");
+  const [draftContent, setDraftContent] = useState(sticky.content || "");
+  const isTitleFocused = useRef(false);
+  const isContentFocused = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const handleStart = (clientX, clientY, target) => {
     const tag = target.tagName.toLowerCase();
@@ -69,6 +73,14 @@ export default function DraggableSticky({ sticky, onUpdate, onDelete }) {
       setPos({ x: sticky.position.x, y: sticky.position.y });
     }
   }, [sticky.position, isDragging]);
+  useEffect(() => {
+    if (!isTitleFocused.current) {
+      setDraftTitle(sticky.title || "");
+    }
+    if (!isContentFocused.current) {
+      setDraftContent(sticky.content || "");
+    }
+  }, [sticky.title, sticky.content]);
   return (
     <div
       onMouseDown={handleMouseDown}
@@ -95,8 +107,11 @@ export default function DraggableSticky({ sticky, onUpdate, onDelete }) {
       <div className="flex-1 p-4 pt-1 flex flex-col">
         <input
           type="text"
-          defaultValue={sticky.title}
+          value={draftTitle}
+          onFocus={() => { isTitleFocused.current = true; }}
+          onChange={(e) => setDraftTitle(e.target.value)}
           onBlur={(e) => {
+            isTitleFocused.current = false;
             if (e.target.value !== sticky.title) {
               onUpdate(sticky._id, { title: e.target.value });
             }
@@ -105,8 +120,11 @@ export default function DraggableSticky({ sticky, onUpdate, onDelete }) {
           placeholder="Title (Optional)"
         />
         <textarea
-          defaultValue={sticky.content}
+          value={draftContent}
+          onFocus={() => { isContentFocused.current = true; }}
+          onChange={(e) => setDraftContent(e.target.value)}
           onBlur={(e) => {
+            isContentFocused.current = false;
             if (e.target.value !== sticky.content) {
               onUpdate(sticky._id, { content: e.target.value });
             }

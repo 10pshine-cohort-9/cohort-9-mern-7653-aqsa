@@ -28,6 +28,8 @@ export default function TasksCard() {
         if (!socket.connected) socket.connect();
         socket.emit("join", userId);
       }
+    }).catch((err) => {
+      console.error("Failed to fetch profile for socket setup:", err);
     });
     socket.on("task_created", loadTasks);
     socket.on("task_updated", loadTasks);
@@ -98,7 +100,11 @@ export default function TasksCard() {
                       <input
                         type="checkbox"
                         checked={task.completed}
-                        onChange={() => {}}
+                        aria-label={`Mark "${task.title}" as complete`}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleToggle(task._id);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-5 h-5 border border-[#747688] rounded flex items-center justify-center bg-transparent transition-colors group-hover:border-[#0040df] peer-checked:bg-[#0040df] peer-checked:border-[#0040df]">

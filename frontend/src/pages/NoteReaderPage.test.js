@@ -164,6 +164,6 @@ describe("NoteReaderPage", () => {
     });
     const editBtn = screen.getByRole("button", { name: /edit/i });
     await userEvent.click(editBtn);
-    expect(mockNavigate).toHaveBeenCalledWith("/notes/note_123/edit");
+    expect(mockNavigate).toHaveBeenCalledWith("/note-editor/note_123");
   });
 });
