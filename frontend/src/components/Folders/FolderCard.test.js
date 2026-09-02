@@ -91,6 +91,21 @@ describe("FolderCard", () => {
       color: "rgb(139, 92, 246)",
     });
   });
+  test("does not navigate when delete button is clicked", () => {
+    renderCard();
+    const deleteButton = screen.getByTitle("Delete folder");
+    fireEvent.click(deleteButton);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  test("does not navigate when add notes button is clicked", () => {
+    renderCard();
+    const addNotesButton = screen.getByRole("button", {
+      name: /add existing notes/i,
+    });
+    fireEvent.click(addNotesButton);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
   test("uses default color when folder color is missing", () => {
     renderCard({
       folder: {

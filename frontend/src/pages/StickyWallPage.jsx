@@ -5,6 +5,7 @@ import DraggableSticky from "../components/Sticky/DraggableSticky";
 import { getStickies, createSticky, updateSticky, deleteSticky } from "../api/sticky.js";
 import { socket } from "../api/socket.js";
 import axios from "../api/axios.js";
+
 const STICKY_COLORS = [
   { name: "Yellow", bg: "#fef08a", text: "#713f12" },
   { name: "Green", bg: "#bbf7d0", text: "#14532d" },
@@ -12,6 +13,7 @@ const STICKY_COLORS = [
   { name: "Blue", bg: "#bae6fd", text: "#0369a1" },
   { name: "Orange", bg: "#fed7aa", text: "#7c2d12" },
 ];
+
 export default function StickyWallPage() {
   const [stickies, setStickies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,11 +22,15 @@ export default function StickyWallPage() {
   const [content, setContent] = useState("");
   const [color, setColor] = useState(STICKY_COLORS[0].bg);
   const [isCreating, setIsCreating] = useState(false);
+  
   const fetchSeq = useRef(0);
+  const mutationCountRef = useRef(0);
+
   useEffect(() => {
     loadStickies();
     fetchUser();
   }, []);
+
   async function fetchUser() {
     try {
       const { data } = await axios.get("/auth/profile");
@@ -36,30 +42,39 @@ export default function StickyWallPage() {
       console.error("Failed to fetch profile for socket room:", err);
     }
   }
+
   useEffect(() => {
     const handleStickyCreated = (newSticky) => {
+      mutationCountRef.current++;
       setStickies((prev) => {
         if (prev.some((s) => s._id === newSticky._id)) return prev;
         return [...prev, newSticky];
       });
     };
+
     const handleStickyUpdated = (updatedSticky) => {
+      mutationCountRef.current++;
       setStickies((prev) =>
         prev.map((s) => (s._id === updatedSticky._id ? updatedSticky : s))
       );
     };
+
     const handleStickyDeleted = (deletedId) => {
+      mutationCountRef.current++;
       setStickies((prev) => prev.filter((s) => s._id !== deletedId));
     };
+
     socket.on("sticky_created", handleStickyCreated);
     socket.on("sticky_updated", handleStickyUpdated);
     socket.on("sticky_deleted", handleStickyDeleted);
+
     return () => {
       socket.off("sticky_created", handleStickyCreated);
       socket.off("sticky_updated", handleStickyUpdated);
       socket.off("sticky_deleted", handleStickyDeleted);
     };
   }, []);
+
   useEffect(() => {
     if (!userId) return;
     if (!socket.connected) {
@@ -76,17 +91,26 @@ export default function StickyWallPage() {
       socket.off("connect", handleConnect);
     };
   }, [userId]);
+
   async function loadStickies() {
     const seq = ++fetchSeq.current;
+    const startMutationCount = mutationCountRef.current;
     try {
       setLoading(true);
       const data = await getStickies();
+      
       if (seq === fetchSeq.current) {
         const fetched = data.stickies || [];
-        const fetchedIds = new Set(fetched.map((s) => s._id));
+        
         setStickies((prev) => {
-          const socketOnly = prev.filter((s) => !fetchedIds.has(s._id));
-          return [...fetched, ...socketOnly];
+          if (mutationCountRef.current === startMutationCount) {
+            return fetched;
+          }
+          
+          const fetchedIds = new Set(fetched.map((s) => s._id));
+          const socketOnlyItems = prev.filter((s) => !fetchedIds.has(s._id));
+          
+          return [...fetched, ...socketOnlyItems];
         });
       }
     } catch (err) {
@@ -97,11 +121,13 @@ export default function StickyWallPage() {
       }
     }
   }
+
   async function handleCreate(e) {
     e.preventDefault();
     if (!content.trim() || isCreating) return;
     try {
       setIsCreating(true);
+      mutationCountRef.current++;
       const offset = (stickies.length % 15) * 25;
       const newStickyPayload = {
         title: title.trim(),
@@ -123,8 +149,10 @@ export default function StickyWallPage() {
       setIsCreating(false);
     }
   }
+
   async function handleUpdate(id, updates) {
     try {
+      mutationCountRef.current++;
       setStickies((prev) =>
         prev.map((s) => (s._id === id ? { ...s, ...updates } : s))
       );
@@ -134,8 +162,10 @@ export default function StickyWallPage() {
       loadStickies();
     }
   }
+
   async function handleDelete(id) {
     try {
+      mutationCountRef.current++;
       setStickies((prev) => prev.filter((s) => s._id !== id));
       await deleteSticky(id);
     } catch (err) {
@@ -143,6 +173,7 @@ export default function StickyWallPage() {
       loadStickies();
     }
   }
+
   return (
     <div className="flex h-screen bg-[#fdf9f1] text-[#1c1c17] font-sans antialiased overflow-hidden">
       <Sidebar />

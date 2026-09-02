@@ -100,6 +100,7 @@ export default function TasksCard() {
                       <input
                         type="checkbox"
                         checked={task.completed}
+                        onClick={(e) => e.stopPropagation()}
                         aria-label={`Mark "${task.title}" as complete`}
                         onChange={(e) => {
                           e.stopPropagation();

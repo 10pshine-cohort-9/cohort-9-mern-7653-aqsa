@@ -212,6 +212,8 @@ const FabricCanvas = forwardRef(function FabricCanvas(
   async function undo() {
     const canvas = fabricCanvas.current;
     if (!canvas || isHistoryAction.current || undoStack.current.length <= 1) return;
+    const previousUndoStack = [...undoStack.current];
+    const previousRedoStack = [...redoStack.current];
     try {
       isHistoryAction.current = true;
       const currentState = undoStack.current.pop();
@@ -225,14 +227,19 @@ const FabricCanvas = forwardRef(function FabricCanvas(
       exportCanvasObjects();
       updateStyles();
     } catch (error) {
+      undoStack.current = previousUndoStack;
+      redoStack.current = previousRedoStack;
       console.error("Undo error:", error);
     } finally {
       isHistoryAction.current = false;
     }
   }
+
   async function redo() {
     const canvas = fabricCanvas.current;
     if (!canvas || isHistoryAction.current || redoStack.current.length === 0) return;
+    const previousUndoStack = [...undoStack.current];
+    const previousRedoStack = [...redoStack.current];
     try {
       isHistoryAction.current = true;
       const nextState = redoStack.current.pop();
@@ -245,6 +252,8 @@ const FabricCanvas = forwardRef(function FabricCanvas(
       exportCanvasObjects();
       updateStyles();
     } catch (error) {
+      undoStack.current = previousUndoStack;
+      redoStack.current = previousRedoStack;
       console.error("Redo error:", error);
     } finally {
       isHistoryAction.current = false;

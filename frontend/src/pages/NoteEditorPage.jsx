@@ -387,7 +387,11 @@ function NoteEditorPage() {
       const targetCanvasRef = canvasRefs.current[targetPageId];
       if (!targetCanvasRef) return;
       try {
-        await targetCanvasRef.addObjectFromData(exportedObj);
+        const success = await targetCanvasRef.addObjectFromData(exportedObj);
+        if (success === false) {
+          console.error("Target canvas failed to add object, skipping source removal.");
+          return;
+        }
       } catch (error) {
         console.error("Failed to move object to page:", error);
         return;
