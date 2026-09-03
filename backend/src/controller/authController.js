@@ -83,7 +83,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "If an account with that email exists, a password reset link has been sent.",
+    message: "If an account with that email exists, a password reset otp has been sent.",
   });
 });
 
