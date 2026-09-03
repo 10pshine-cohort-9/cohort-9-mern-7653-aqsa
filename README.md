@@ -6,6 +6,7 @@ Cohort 9 — MERN (NodeJS+ReactJS) assignment for Aqsa Arif
 A full-stack Notes Management Application built using the **MERN Stack** and **Tailwind CSS**.
 
 Notes App is a productivity application where users can create multipage notes, add different types of content such as text, drawings, images, videos, and audio, organize notes using folders and categories, manage tasks, export notes as PDF, and quickly write ideas using a Sticky Wall.
+
 ---
 
 ## 🚀 Features
@@ -70,7 +71,6 @@ The application uses **Cloudinary** for storing and managing media such as:
 - Images
 - Videos
 - Audio
-- Other uploaded files
 
 ---
 
@@ -110,7 +110,7 @@ Backend testing is done using:
 - Mocha
 - Chai
 
-> **Note:** Backend tests run against `MONGO_TEST_URI` and require an active **MongoDB Replica Set** (e.g., local standalone replica set `rs0` or an in-memory runner like `mongodb-memory-server`) to support database transactions during test runs.
+> **Note:** Backend tests run against `MONGO_TEST_URI` and require an active **MongoDB Replica Set**  to support database transactions during test runs.
 
 ## Frontend Testing
 
@@ -161,10 +161,12 @@ VITE_API_URL=http://localhost:5000/api
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository_url>
-cd <repository_folder>
+git clone https://github.com/10pshine-cohort-9/cohort-9-mern-7653-aqsa
+cd cohort-9-mern-7653-aqsa
 ```
 ### 2. Backend Setup
+
+In your first terminal, start the backend server:
 ```bash
 cd backend
 npm install
@@ -172,8 +174,10 @@ npm run dev
 ```
 ### 3. Frontend Setup
 
+Open a **separate/second terminal**, navigate to the project root, and run:
+
 ```bash
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 ```
